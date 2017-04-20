@@ -1,8 +1,8 @@
 %run test first to get B
-
+%draw more field lines see whatsw happening!!!
 %filename = 'test.gif';
 figure(1)
-for where = 1:51
+for where = 1:row
 
 pcolor(x,y,reshape(p(where,:),[w,l])')
 shading interp

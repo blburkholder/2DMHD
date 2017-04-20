@@ -5,11 +5,9 @@ public:
   ~grid();
   void set(int index, float value);
   float get(int index);
-  void g_set(int index, float value);
-  float g_get(int index);
   void d_set(int index, float value);
   float d_get(int index);
-  void smooth(int k);
+  void smooth();
   grid& operator= (grid & g);
   grid(const grid &obj);
 

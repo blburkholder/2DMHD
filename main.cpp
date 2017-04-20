@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
     std::ifstream infile("input.txt");
 
-    float deltax, deltay, deltat, gam, alph, sig, resistivity, b_guide;
+    float deltax, deltay, deltat, gam, alph, sig, resistivity, b_guide, bs;
     int width, height, number_of_steps, output, init, close;
 
     std::string b;
@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
     infile >> gam >> b;
     infile >> alph >> b;
     infile >> sig >> b;
+    infile >> bs >> b;
     infile >> b_guide >> b;
     infile >> resistivity >> b;
     infile >> close >> b;
@@ -31,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     MHD_2D plasmoid(init, deltax, deltay, width, height,\
       deltat, number_of_steps, output, gam, alph, b_guide, sig,\
-      resistivity, close);
+      bs, resistivity, close);
 
     plasmoid.leap();
 }

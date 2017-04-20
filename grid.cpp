@@ -2,7 +2,6 @@
 
 grid::~grid(){
   delete[] parameter;
- // delete[] grid_150;
   delete[] diff;
 }
 
@@ -11,7 +10,6 @@ grid::grid(int x, int y, float sig):
   ny( y ),
   sigma( sig ),
   parameter ( new float[(nx+1)*(ny+1)] ),
-//  grid_150 ( new float[((nx+1)*(ny+1))] ),
   diff ( new float[(nx+1)*(ny+1)] )  {}
 
 void grid::set(int index, float value) {
@@ -29,16 +27,8 @@ void grid::d_set(int index, float value) {
 float grid::d_get(int index) {
   return diff[index];
 }
-/*
-void grid::g_set(int index, float value) {
-  grid_150[index] = value;
-}
 
-float grid::g_get(int index) {
-  return grid_150[index];
-} */
-
-void grid::smooth(int k) {
+void grid::smooth() {
   //smoothing part 1
   for (int j = 1; j <= ny-1; j++) {
     for (int i = 1; i <= nx-1; i++) {
@@ -54,41 +44,6 @@ void grid::smooth(int k) {
       set(j*(nx+1) + i,d_get(j*(nx+1) + i));
     }
   }
-/*
-  //smoothing part 2 
-  if ( k == 1 ) {
-    for (int i = 1; i <= nx-1; i++) {
-      for (int j = 1; j <= ny-1; j++) {
-        g_set(j*(nx+1) + i, get(j*(nx+1) + i));
-      }
-    }
-  }
-  for (int i = 1; i <= nx-1; i++) {
-    for (int j = 1; j <= ny-1; j++) {
-      d_set(j*(nx+1) + i, get(j*(nx+1) + i) - g_get(j*(nx+1) + i));
-    }
-  }
-  for (int i = 1; i <= nx-1; i++) {
-    for (int j = 1; j <= ny-1; j++) {
-      g_set(j*(nx+1) + i,sigma*d_get(j*(nx+1) + i) +\
-        ((1-sigma)/4)*(d_get((j+1)*(nx+1) + i+1) +\
-        d_get((j-1)*(nx+1) + i+1) + d_get((j+1)*(nx+1) + i-1) +\
-        d_get((j-1)*(nx+1) + i-1)));
-    }
-  }
-  for (int i = 1; i <= nx-1; i++) {
-    for (int j = 1; j <= ny-1; j++) {
-      if(d_get(j*(nx+1) + i) > 0) set(j*(nx+1) + i,get(j*(nx+1) + i) - (d_get(j*(nx+1) + i) - g_get(j*(nx+1) + i)));
-      else set(j*(nx+1) + i,get(j*(nx+1) + i) + (d_get(j*(nx+1) + i) - g_get(j*(nx+1) + i)));
-    }
-  }
-  if ( k % 150 == 0 ) {
-    for (int i = 1; i <= nx-1; i++) {
-      for (int j = 1; j <= ny-1; j++) {
-        g_set(j*(nx+1) + i, get(j*(nx+1) + i));
-      }
-    }    
-  } */
 }
 
 //I wrote a copy constructor yay

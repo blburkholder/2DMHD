@@ -13,7 +13,7 @@ public:
 
   MHD_2D (int init, float deltax, float deltay, int width, int height,\
     float deltat, int stps, int output, float gam, float alph,\
-    float sig, float bg, float resistivity, int cl);
+    float sig, float bs, float bg, float resistivity, int cl);
   ~MHD_2D ();
   void initialize_grid();
   void initialize_grid2();
@@ -75,12 +75,13 @@ public:
   //also do pressure
   void ampere();
   //smoothing is numerical diffusion
-  void smooth(int k);
+  void smooth();
   void bound();
   void fancy_bound();
   void mag_bound();
   void j_bound();
   void j_bound_fancy();
+  void j_bound_KH();
   void bound_KH();
   void leap();
   void save_iteration();

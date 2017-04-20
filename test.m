@@ -1,17 +1,16 @@
-
+%{
 bx = textread('bx.txt');
 1
 by = textread('by.txt');
 2
-%bz = textread('bz.txt');
+%bz = textread('bz2.txt');
 p = textread('p.txt');
 3
-%p = textread('rho.txt');
+%p = textread('rho2.txt');
 ux = textread('ux.txt');
 4
 uy = textread('uy.txt');
-5
-%uz = textread('uz.txt');
+%uz = textread('uz2.txt');
 
 bx = bx(:,1:end-1);
 by = by(:,1:end-1);
@@ -55,7 +54,7 @@ startx = ddx*ones(length(starty),1);
 
 %movie
 
-figure
+FigHandle = figure('Position',[100,100,1400,1000]);
 for i = 1:row   
   %bxx = reshape(bx(i,:),[w,l])';
   %byy = reshape(by(i,:),[w,l])';  
@@ -63,7 +62,7 @@ for i = 1:row
   uyy = reshape(uy(i,:),[w,l])';
   ppp = reshape(p(i,:),[w,l])';
  i
-  pcolor(x,y,ppp)
+  pcolor(x,y,uxx)
   colorbar
   shading interp
   hold on
@@ -72,8 +71,8 @@ for i = 1:row
   
   streamline(stream2(sx,sy,reshape(bx(i,:),[w,l])',reshape(by(i,:),[w,l])',startx,starty));
   streamline(stream2(sx,sy,-reshape(bx(i,:),[w,l])',-reshape(by(i,:),[w,l])',startx,starty));
-  
-  pause
+  daspect([3 1 1])
+  pause(0.5)
   %clf
 end
 %}

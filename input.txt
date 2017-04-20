@@ -3,13 +3,14 @@
 0.1      //dy:_spacing_in_y_direction
 150      //ddx:_length_along_x
 20       //ddy:_length_along_y_centered_at_0
-0.005    //dt:_time_step
-15000    //t:_number_of_steps
-1000     //output_step
+0.002     //dt:_time_step
+100000     //t:_number_of_steps
+5000      //output_step
 1.66667  //gamma:_ratio_of_specific_heats
 0.5      //alpha:_boundary_extrapolation_parameter
 0.95     //sigma:_smoothing_parameter
-0.01      //b_guide:_initial_z_magfield
-0.002    //res:_constant_resistivity
+0.99     //bs:_mag_smoothing_parameter
+0.01     //b_guide:_initial_z_magfield
+0.001    //res:_constant_resistivity
 1        //closure_relation_1_or_2
 
