@@ -1,13 +1,46 @@
 #include "MHD_2D.h"
-MHD_2D::~MHD_2D(){}
+MHD_2D::~MHD_2D(){
 
-//energy2() sucks?
-//more smoothing for pressure than velocity
+delete h;
+delete rho;
+delete ux;
+delete uy;
+delete uz;
+delete bx;
+delete by;
+delete bz;
+
+delete hv;
+delete rhov;
+delete uxv;
+delete uyv;
+delete uzv;
+delete bxv;
+delete byv;
+delete bzv;
+
+delete lp_h;
+delete lp_rho;
+delete lp_ux;
+delete lp_uy;
+delete lp_uz;
+delete lp_bx;
+delete lp_by;
+delete lp_bz;
+
+delete eta;
+delete jx;
+delete jy;
+delete jz;
+delete jj;
+delete p; 
+}
+
+//energy2() sucks still?
 //current dependent resistivity
-MHD_2D::MHD_2D(int init, float deltax, float deltay, int width, int height,\
+MHD_2D::MHD_2D(float deltax, float deltay, int width, int height,\
     float deltat, int number_of_steps, int output, float gam, float alph, float bg,\
     float bs, float sig, float resistivity, int cl) :
-  init_con( init ),
   dx( deltax ),
   dy( deltay ),
   ddx( width ),
@@ -27,21 +60,21 @@ MHD_2D::MHD_2D(int init, float deltax, float deltay, int width, int height,\
   down ( 0 ),
   left ( 0 ),
   right ( 0 ),
-  h( new grid(nx,ny,0) ),
-  rho ( new grid(nx,ny,0) ),
-  ux ( new grid(nx,ny,0) ),
-  uy ( new grid(nx,ny,0) ),
-  uz ( new grid(nx,ny,0) ),
-  bx ( new grid(nx,ny,0) ),
-  by ( new grid(nx,ny,0) ),
-  bz ( new grid(nx,ny,0) ),
+  h( new grid(nx,ny,sig) ),
+  rho ( new grid(nx,ny,sig) ),
+  ux ( new grid(nx,ny,sig) ),
+  uy ( new grid(nx,ny,sig) ),
+  uz ( new grid(nx,ny,sig) ),
+  bx ( new grid(nx,ny,bs) ),
+  by ( new grid(nx,ny,bs) ),
+  bz ( new grid(nx,ny,bs) ),
 
-  p ( new grid(nx,ny,0) ),
-  jx ( new grid(nx,ny,0) ),
-  jy ( new grid(nx,ny,0) ),
-  jz ( new grid(nx,ny,0) ),
-  jj ( new grid(nx,ny,0) ),
-  eta ( new grid(nx,ny,0) ),
+  p ( new grid(nx,ny,1.0) ),
+  jx ( new grid(nx,ny,1.0) ),
+  jy ( new grid(nx,ny,1.0) ),
+  jz ( new grid(nx,ny,1.0) ),
+  jj ( new grid(nx,ny,1.0) ),
+  eta ( new grid(nx,ny,1.0) ),
 
   hv( new grid(nx,ny,sig) ),
   rhov ( new grid(nx,ny,sig) ),
@@ -52,29 +85,17 @@ MHD_2D::MHD_2D(int init, float deltax, float deltay, int width, int height,\
   byv ( new grid(nx,ny,bs) ),
   bzv ( new grid(nx,ny,bs) ),
 
-  lp_h( new grid(nx,ny,0) ),
-  lp_rho ( new grid(nx,ny,0) ),
-  lp_ux ( new grid(nx,ny,0) ),
-  lp_uy ( new grid(nx,ny,0) ),
-  lp_uz ( new grid(nx,ny,0) ),
-  lp_bx ( new grid(nx,ny,0) ),
-  lp_by ( new grid(nx,ny,0) ),
-  lp_bz ( new grid(nx,ny,0) )
-  { uxfile.open("ux.txt");
-    uyfile.open("uy.txt");
-    uzfile.open("uz.txt");
-    bxfile.open("bx.txt");
-    byfile.open("by.txt");
-    bzfile.open("bz.txt");
-    rhofile.open("rho.txt");
-    pfile.open("p.txt"); 
-    if ( init_con == 1 ) initialize_grid();
-    else if ( init_con == 2 )initialize_grid2();
-    else if ( init_con == 3 ) initialize_grid_recon();
-    else initialize_grid_KH();
- }
+  lp_h( new grid(nx,ny,sig) ),
+  lp_rho ( new grid(nx,ny,sig) ),
+  lp_ux ( new grid(nx,ny,sig) ),
+  lp_uy ( new grid(nx,ny,sig) ),
+  lp_uz ( new grid(nx,ny,sig) ),
+  lp_bx ( new grid(nx,ny,bs) ),
+  lp_by ( new grid(nx,ny,bs) ),
+  lp_bz ( new grid(nx,ny,bs) ) {}
 //plasma bomb
 //secondary closure relation not implemented
+/*
 void MHD_2D::initialize_grid2() {
   for (int j = 0; j <= ny; j++) {
     for (int i = 0; i <= nx; i++) {
@@ -123,6 +144,8 @@ void MHD_2D::initialize_grid2() {
   bound(); 
   save_iteration();
 }
+*/
+/*
 //alfven wave
 //secondary closure relation not implemented
 void MHD_2D::initialize_grid() {
@@ -173,171 +196,41 @@ void MHD_2D::initialize_grid() {
   bound(); 
   save_iteration();
 }
-
-void MHD_2D::initialize_grid_recon() {
-  float xd = 70;
-  float k1 = 2;
-  float k2 = 1;
-  float p_inf = 0.2;
-  float px = 0;
-  float c2 = (1 - p_inf)/(k2*pow(2,k1+1)/k1 - 1 - tanh(k2));
-  float c1 = 1 - p_inf + c2*(1 + tanh(k2));
-  float y = 0;
-
-  for (int j = 0; j <= ny; j++) {
-    for (int i = 0; i <= nx; i++) {
-      here = index(i,j);
-      //vertical dimension is symmetric about axis
-      y = dy*(float)j - (float)ddy/2.0;
-      //pressure in the middle
-      px = c1*pow(1.0+(float)i*dx/xd,-k1) + c2*tanh(k2*((float)i*dx/xd - 1.0)) - c2 + p_inf;
-
-      p->set(here,0.25 + (1.0/(cosh(y*sqrt(px))*cosh(y*sqrt(px))))*px);
-      rho->set(here,p->get(here));
-
-      bx->set(here,-sqrt(px)*tanh(y*sqrt(px)));
-      by->set(here,(-0.5/px)*(1.0 - y*sqrt(px)*tanh(y*sqrt(px)))*\
-        (c2*k2*(1.0/(cosh(k2*((float)i*dx/xd-1.0))*cosh(k2*((float)i*dx/xd-1.0))))/xd -\
-        k1*c1*pow(1.0+(float)i*dx/xd,-k1-1.0)/xd));
-      bz->set(here,b_guide);
-
-      ux->set(here,0.0);
-      uy->set(here,0.0);
-      uz->set(here,0.0);
-      //leap quantities are the same for first iteration
-      lp_rho->set(here,rho->get(here));
-      lp_ux->set(here,0.0);
-      lp_uy->set(here,0.0);
-      lp_uz->set(here,0.0);
-      lp_bx->set(here,bx->get(here));
-      lp_by->set(here,by->get(here));
-      lp_bz->set(here,bz->get(here));
-
-      if ( close == 1 ) lp_h->set(here,pow(p->get(here)/2.0,1.0/gamma));
-      else lp_h->set(here,0.5*rho->get(here)*(ux->get(here)*ux->get(here) +\
-        uy->get(here)*uy->get(here) + uz->get(here)*uz->get(here)) + \
-        0.5*(bx->get(here)*bx->get(here) + by->get(here)*by->get(here) +\
-        bz->get(here)*bz->get(here)) + 0.5*p->get(here)/(gamma-1.0));
-
-      h->set(here,lp_h->get(here));
-      eta->set(here,res);
-
-      hv->set(here,h->get(here));
-      rhov->set(here,rho->get(here));
-      uxv->set(here,ux->get(here));
-      uyv->set(here,uy->get(here));
-      uzv->set(here,uz->get(here));
-      bxv->set(here,bx->get(here));
-      byv->set(here,by->get(here));
-      bzv->set(here,bz->get(here));
-    }
-  }
-  for (int j = 1; j <= ny-1; j++) {
-    for (int i = 1; i <= nx-1; i++) {
-      here = index(i,j);
-      jx->set(here,(0.5/dy)*(bz->get(index(i,j+1)) - bz->get(index(i,j-1))));
-      jy->set(here,(-0.5/dx)*(bz->get(index(i+1,j)) - bz->get(index(i-1,j))));
-      jz->set(here,(-0.5/dy)*(bx->get(index(i,j+1)) - bx->get(index(i,j-1))) +\
-        (0.5/dx)*(by->get((index(i+1,j))) - by->get((index(i-1,j)))));
-      jj->set(here,jx->get(here)*jx->get(here) + jy->get(here)*jy->get(here) + jz->get(here)*jz->get(here));
-    }
-  }
-  j_bound_fancy();
-  //fancy_bound();
-  //mag_bound();
-  save_iteration();
-}
-
-void MHD_2D::initialize_grid_KH() {
-  float y = 0;
-  for (int j = 0; j <= ny; j++) {
-    for (int i = 0; i <= nx; i++) {
-      here = index(i,j);
-      y = dy*j - ddy/2;     
-      
-      rho->set(here,1+0.1*tanh(y));
-      ux->set(here,tanh(y));
-      uy->set(here,-0.5*exp(-(float)(16*y*y))*sin((float)i*dx));
-      uz->set(here,0);
-
-      bx->set(here,0);      
-      by->set(here,0);
-      bz->set(here,tanh(i*dx));
-      eta->set(here,res);
-      p->set(here,1.5-bz->get(here)*bz->get(here));
-      h->set(here,pow(p->get(here)/2,1/gamma));
-
-      lp_h->set(here,h->get(here));
-      lp_rho->set(here,rho->get(here));
-      lp_ux->set(here,ux->get(here));
-      lp_uy->set(here,uy->get(here));
-      lp_uz->set(here,uz->get(here));
-      lp_bx->set(here,bx->get(here));      
-      lp_by->set(here,by->get(here));
-      lp_bz->set(here,bz->get(here));
-
-      hv->set(here,h->get(here));
-      rhov->set(here,rho->get(here));
-      uxv->set(here,ux->get(here));
-      uyv->set(here,uy->get(here));
-      uzv->set(here,uz->get(here));
-      bxv->set(here,bx->get(here));
-      byv->set(here,by->get(here));
-      bzv->set(here,bz->get(here));
-    }
-  }
-  for (int j = 1; j <= ny-1; j++) {
-    for (int i = 1; i <= nx-1; i++) {
-      jx->set(here,(0.5/dy)*(bz->get(index(i,j+1)) - bz->get(index(i,j-1))));
-      jy->set(here,(-0.5/dx)*(bz->get(index(i+1,j)) - bz->get(index(i-1,j))));
-      jz->set(here,(-0.5/dy)*(bx->get(index(i,j+1)) - bx->get(index(i,j-1))) +\
-        (0.5/dx)*(by->get((index(i+1,j))) - by->get((index(i-1,j)))));
-      jj->set(here,jx->get(here)*jx->get(here) +\
-        jy->get(here)*jy->get(here) + jz->get(here)*jz->get(here));
-    }
-  }
-  bound_KH();
-
-}
+*/
 
 int MHD_2D::index(int x, int y) {
   return y*(nx+1) + x;
 }
 
 void MHD_2D::leap() {
+  initialize_grid();
   for (int i = 1; i <= steps; i++) {
     integrate();
 
-    lp_rho = rho;
-    lp_ux = ux;
-    lp_uy = uy;
-    lp_uz = uz;
-    lp_bx = bx;
-    lp_by = by;
-    lp_bz = bz;
-    lp_h = h;
+    *lp_rho = *rho;
+    *lp_ux = *ux;
+    *lp_uy = *uy;
+    *lp_uz = *uz;
+    *lp_bx = *bx;
+    *lp_by = *by;
+    *lp_bz = *bz;
+    *lp_h = *h;
  
-
-    if ( init_con < 3 ) bound();
-    else if ( init_con == 3) {
-      mag_bound();
-      fancy_bound();
-    }
-    else bound_KH();
-    //maybe no smoothing for KH?
-    if ( init_con != 4 ) smooth();
-    //if ( init_con == 3 ) mag_bound();
+    bound();
+    smooth();
+    bound();
     ampere();
+
     if ( steps == 0 ) std::cout << "quitting at iteration" << i << std::endl;
 
-    rho = rhov;
-    ux = uxv;
-    uy = uyv;
-    uz = uzv;
-    bx = bxv;
-    by = byv;
-    bz = bzv;
-    h = hv;
+    *rho = *rhov;
+    *ux = *uxv;
+    *uy = *uyv;
+    *uz = *uzv;
+    *bx = *bxv;
+    *by = *byv;
+    *bz = *bzv;
+    *h = *hv;
 
     if ((i % out_steps) == 0) {
       std::cout << "integration step:" << i << std::endl;
@@ -424,11 +317,9 @@ void MHD_2D::ampere() {
         jy->get(here)*jy->get(here) + jz->get(here)*jz->get(here)); 
     }
   }
-  if ( init_con < 3 ) j_bound();
-  else if ( init_con == 3 ) j_bound_fancy();
-  else j_bound_KH();
+  j_bound();
 }
-
+/*
 void MHD_2D::j_bound() {
   for (int i = 1; i <= nx-1; i++) {
     jx->set(index(i,0),jx->get(index(i,ny-1)));
@@ -494,7 +385,6 @@ void MHD_2D::bound() {
     bzv->set(index(nx,j),bzv->get(index(1,j)));
   }
 }
-
 void MHD_2D::j_bound_fancy() {
   for (int i = 1; i <= nx-1; i++) {
     jx->set(index(i,0),jx->get(index(i,2)) - alpha*(jx->get(index(i,3)) - jx->get(index(i,1))));
@@ -525,7 +415,9 @@ void MHD_2D::j_bound_fancy() {
       jz->get(index(nx,j))*jz->get(index(nx,j)));
   }
 }
-//abs for pressure and density extrapolations!!!
+*/
+/*
+//abs for pressure and density extrapolations?
 void MHD_2D::fancy_bound() {
   for (int j = 1; j <= ny-1; j++) {
   //left
@@ -723,7 +615,7 @@ void MHD_2D::j_bound_KH() {
     jj->set(index(nx,j),jj->get(index(1,j)));
   }
 }
-
+*/
 void MHD_2D::smooth() {
   rhov->smooth();
   hv->smooth();

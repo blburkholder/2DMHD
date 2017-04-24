@@ -1,3 +1,5 @@
+#include <iostream>
+
 class grid {
 public:
 
@@ -16,7 +18,6 @@ public:
   const int ny;
   const float sigma;
   float * parameter;
-  //float * grid_150;
   float * diff;
 };
 

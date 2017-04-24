@@ -1,3 +1,5 @@
+#ifndef MHD_2D__H
+#define MHD_2D__H
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -11,16 +13,10 @@
 class MHD_2D {
 public:
 
-  MHD_2D (int init, float deltax, float deltay, int width, int height,\
+  MHD_2D (float deltax, float deltay, int width, int height,\
     float deltat, int stps, int output, float gam, float alph,\
     float sig, float bs, float bg, float resistivity, int cl);
-  ~MHD_2D ();
-  void initialize_grid();
-  void initialize_grid2();
-  void initialize_grid_recon();
-  void initialize_grid_KH();
-
-  void integrate();
+  virtual ~MHD_2D ();
 
   float rho_f(int i) { return rho->get(i)*ux->get(i); }
   float rho_g(int i) { return rho->get(i)*uy->get(i); }
@@ -71,26 +67,23 @@ public:
     uy->get(i)*by->get(i) + uz->get(i)*bz->get(i)) +\
     eta->get(i)*(jz->get(i)*bx->get(i) - jx->get(i)*bz->get(i)); }
 
+  virtual void initialize_grid() = 0;
+  void integrate();
   //calculate resistivity and current density here
   //also do pressure
   void ampere();
   //smoothing is numerical diffusion
   void smooth();
-  void bound();
-  void fancy_bound();
-  void mag_bound();
-  void j_bound();
-  void j_bound_fancy();
-  void j_bound_KH();
-  void bound_KH();
+  virtual void bound() = 0;
+  virtual void j_bound() = 0;
   void leap();
   void save_iteration();
   int index(int x, int y);
   void quit();
 
-private:
+//private:
   //dx,dy is grid spacing, ddx,ddy are grid lengths
-  const int init_con;
+  //const int init_con;
   const float dx;
   const float dy;
   const int ddx;
@@ -155,3 +148,4 @@ private:
   std::ofstream rhofile;
   std::ofstream pfile;
 };
+#endif

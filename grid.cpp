@@ -68,7 +68,7 @@ grid::grid(const grid &obj) :
 */
 
 //Ill overload your operator=
-grid& grid::operator = (grid &g) {
+grid& grid::operator= (grid &g) {
   for (int j = 0; j <= ny; j++) { 
     for (int i = 0; i <= nx; i++) {
       set(j*(nx+1) + i, g.get(j*(nx+1) + i));
